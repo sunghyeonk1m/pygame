@@ -19,7 +19,7 @@ ingame = True
 keys = [0, 0, 0, 0]      # 애니메이션용 키 값 (0.0 ~ 1.0)
 keyset = [0, 0, 0, 0]    # 실제 눌린 키 상태 (0 또는 1)
 
-maxframe = 60  # 최대 FPS
+maxframe = 120  # 최대 FPS
 fps = 0
 
 gst = time.time()
@@ -81,6 +81,8 @@ last_combo = 0
 
 score = 0
 
+fever_mode = False
+
 max_combo = 80
 
 combo_time = Time + 1
@@ -88,13 +90,21 @@ combo_time = Time + 1
 rate_data = [0, 0, 0, 0] 
 
 def rating(n):
-    global combo, miss_anim, last_combo, combo_effect, combo_effect2, combo_time, rate, score
+    global combo, miss_anim, last_combo, combo_effect, combo_effect2, combo_time, rate, score, fever_mode
+    # 피버모드드
+    if combo >=  max_combo:
+        fever_mode = True
+    else:
+        fever_mode = False
+        
+    multiplier = 2 if fever_mode else 1
+    # 점수 입력 및 판정 방식식
     if abs((h/12) * 9 - rate_data[n - 1] < 950 * speed * (h / 900) and (h / 12) * 9 - rate_data[n - 1] >= 200 * speed * (h / 900)):
         last_combo = combo
         miss_anim = 1
         combo = 0
         combo_effect = 0.2
-        combo_time = Time + 1
+        combo_time = Time + 1 
         combo_effect2 = 1.3
         rate = "WORST"
         score += 0
@@ -106,28 +116,29 @@ def rating(n):
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "BAD"
-        score += 20
+        score += 0
     if abs((h/12) * 9 - rate_data[n - 1]) < 100 * speed * (h / 900) and abs((h / 12) * 9 - rate_data[n - 1]) >= 50 * speed * (h / 900):
         combo += 1
         combo_effect = 0.2
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "GOOD"
-        score += 50
+        score += 50 * multiplier
     if abs((h/12) * 9 - rate_data[n - 1]) < 50 * speed * (h / 900) and abs((h / 12) * 9 - rate_data[n - 1]) >= 15 * speed * (h / 900):
         combo += 1
         combo_effect = 0.2
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "GREAT"
-        score += 70
+        score += 70  * multiplier
     if abs((h/12) * 9 - rate_data[n - 1]) < 15 * speed * (h / 900) and abs((h / 12) * 9 - rate_data[n - 1]) >= 0 * speed * (h / 900):
         combo += 1
         combo_effect = 0.2
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "PERFECT"
-        score += 100
+        score += 100 * multiplier
+        
     
     
 
@@ -329,8 +340,11 @@ while main:
         pygame.draw.rect(screen, (80, 80, 80), (gauge_x, gauge_y, gauge_width, gauge_height))
         
         filled_height = gauge_height * min(combo / max_combo, 1.0)
-        pygame.draw.rect(screen, (100, 255, 100), (gauge_x, gauge_y + gauge_height - filled_height, gauge_width, filled_height))
-        
+        if fever_mode:
+            gauge_color = (255, 100, 100)  # 피버 모드일 때 노란색
+        else:
+            gauge_color = (100, 255, 100)  # 일반 초록색
+        pygame.draw.rect(screen, (gauge_color), (gauge_x, gauge_y + gauge_height - filled_height, gauge_width, filled_height))
         pygame.draw.rect(screen, (255, 255, 255), (gauge_x, gauge_y, gauge_width, gauge_height), 2)
         # miss 판정정
         miss_text.set_alpha(255 - (255 / 4) * miss_anim)
