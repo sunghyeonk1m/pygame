@@ -79,12 +79,16 @@ combo_effect2 = 0
 miss_anim = 0
 last_combo = 0
 
+score = 0
+
+max_combo = 80
+
 combo_time = Time + 1
 
 rate_data = [0, 0, 0, 0] 
 
 def rating(n):
-    global combo, miss_anim, last_combo, combo_effect, combo_effect2, combo_time, rate
+    global combo, miss_anim, last_combo, combo_effect, combo_effect2, combo_time, rate, score
     if abs((h/12) * 9 - rate_data[n - 1] < 950 * speed * (h / 900) and (h / 12) * 9 - rate_data[n - 1] >= 200 * speed * (h / 900)):
         last_combo = combo
         miss_anim = 1
@@ -93,6 +97,7 @@ def rating(n):
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "WORST"
+        score += 0
     if abs((h/12) * 9 - rate_data[n - 1]) < 200 * speed * (h / 900) and abs((h / 12) * 9 - rate_data[n - 1]) >= 100 * speed * (h / 900):
         last_combo = combo
         miss_anim = 1
@@ -101,24 +106,28 @@ def rating(n):
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "BAD"
+        score += 20
     if abs((h/12) * 9 - rate_data[n - 1]) < 100 * speed * (h / 900) and abs((h / 12) * 9 - rate_data[n - 1]) >= 50 * speed * (h / 900):
         combo += 1
         combo_effect = 0.2
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "GOOD"
+        score += 50
     if abs((h/12) * 9 - rate_data[n - 1]) < 50 * speed * (h / 900) and abs((h / 12) * 9 - rate_data[n - 1]) >= 15 * speed * (h / 900):
         combo += 1
         combo_effect = 0.2
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "GREAT"
+        score += 70
     if abs((h/12) * 9 - rate_data[n - 1]) < 15 * speed * (h / 900) and abs((h / 12) * 9 - rate_data[n - 1]) >= 0 * speed * (h / 900):
         combo += 1
         combo_effect = 0.2
         combo_time = Time + 1
         combo_effect2 = 1.3
         rate = "PERFECT"
+        score += 100
     
     
 
@@ -147,9 +156,10 @@ while main:
         fps = clock.get_fps()
             
         ingame_font_combo = pygame.font.Font(os.path.join(Fpath, "PermanentMarker-Regular.ttf"), int((w / 38) * combo_effect2))
-        combo_text = ingame_font_combo.render(str(combo), False, (255, 255, 255))
+        combo_text = ingame_font_combo.render(str(combo), False, (255, 255, 255,))
+        combo_text.set_alpha(128)
         
-        rate_text = ingame_font_rate.render(str(rate), False, (225, 225, 255))
+        rate_text = ingame_font_rate.render(str(rate), False, (225, 225, 255,128))
         rate_text = pygame.transform.scale(rate_text, (int(w / 110 * len(rate) * combo_effect2), int((w / 58 * combo_effect * combo_effect2))))
         
         ingame_font_miss = pygame.font.Font(os.path.join(Fpath, "PermanentMarker-Regular.ttf"), int((w / 38 * miss_anim)))
@@ -306,10 +316,22 @@ while main:
         pygame.draw.rect(screen, (255 - 100 * keys[1], 255 - 100 * keys[1], 255 - 100 * keys[1]), (w / 2 - w / 18, (h / 48) * 39 + (h / 48) * keys[1], w / 27, h / 8))
         pygame.draw.rect(screen, (0,0, 0), (w / 2 - w / 18, (h / 48) * 43 + (h / 48) * (keys[1] * 1.2), w / 27, h / 64), int(h / 150))
         pygame.draw.rect(screen, (50,50, 50), (w / 2 - w / 18, (h / 48) * 39 + (h / 48) * keys[1], w / 27, h / 8), int(h / 150))
-      # 키 디자인
+       # 키 디자인
         pygame.draw.rect(screen, (255 - 100 * keys[2], 255 - 100 * keys[2], 255 - 100 * keys[2]), (w / 2 + w / 58, (h / 48) * 39 + (h / 48) * keys[2], w / 27, h / 8))
         pygame.draw.rect(screen, (0,0, 0), (w / 2 + w / 58, (h / 48) * 43 + (h / 48) * (keys[2] * 1.2), w / 27, h / 64), int(h / 150))
         pygame.draw.rect(screen, (50,50, 50), (w / 2 + w / 58, (h / 48) * 39 + (h / 48) * keys[2], w / 27, h / 8), int(h / 150))
+       # 게이지 바 디자인
+        gauge_x = w / 2.418 + w / 5 + 20
+        gauge_y = (h / 6) * 3        
+        gauge_height = (h / 12) * 6   
+        gauge_width = 20
+        
+        pygame.draw.rect(screen, (80, 80, 80), (gauge_x, gauge_y, gauge_width, gauge_height))
+        
+        filled_height = gauge_height * min(combo / max_combo, 1.0)
+        pygame.draw.rect(screen, (100, 255, 100), (gauge_x, gauge_y + gauge_height - filled_height, gauge_width, filled_height))
+        
+        pygame.draw.rect(screen, (255, 255, 255), (gauge_x, gauge_y, gauge_width, gauge_height), 2)
         # miss 판정정
         miss_text.set_alpha(255 - (255 / 4) * miss_anim)
         
@@ -317,7 +339,12 @@ while main:
         screen.blit(combo_text, (w / 2 - combo_text.get_width() / 2, (h / 12) * 4 - combo_text.get_height() / 2))
         screen.blit(rate_text, (w / 2 - rate_text.get_width() / 2, (h / 12) * 8 - rate_text.get_height() / 2))
         screen.blit(miss_text, (w / 2 - miss_text.get_width() / 2, (h / 12) * 4 - miss_text.get_height() / 2))
-         
+        
+        #점수 폰트 띄우기
+        score_font = pygame.font.Font(os.path.join(Fpath, "PermanentMarker-Regular.ttf"), int (w / 35))
+        score_text = score_font.render(f"Score: {score}", False, (255, 255, 100))
+        screen.blit(score_text, (20,20))
+        
         # 화면 업데이트
         pygame.display.flip()
         
